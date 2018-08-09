@@ -1,4 +1,4 @@
-=== More Hot Sauce - events24 API connector ===
+=== More Hot Sauce - Ents24 API connector ===
 Contributors:
 Tags:
 Requires at least: 4.0.0
@@ -9,4 +9,4 @@ License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
 == Description ==
 
-Use me to connect to your events24 account and retrieve data from the API
+Use me to connect to your Ents24 account and retrieve data from the API
