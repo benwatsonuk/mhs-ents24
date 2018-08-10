@@ -64,7 +64,7 @@ final class MHS_Ents24_Main {
 	 */
 	public function get_the_formatted_data() {
 
-		$transientName = 'mhs-ents24-tour-formatted';
+		$transientName = 'mhs-ents24-events-formatted';
 		$formattedData = get_transient( $transientName );
 
 		//If there is no transient - create it
@@ -79,7 +79,7 @@ final class MHS_Ents24_Main {
 	}//End get_the_formatted_data
 
 	/**
-	 * Return the raw data as provided by events24.
+	 * Return the raw data as provided by ents24.
 	 * @access  public
 	 * @since   1.0.0
 	 */
@@ -101,7 +101,64 @@ final class MHS_Ents24_Main {
 
 
 	/**
-	 * Grab the data from events24.
+	 * Get an auth token from ents24 and put it in the database
+	 * @access  public
+	 * @since   1.0.0
+	 */
+	public function get_auth_token() {
+
+		$clientData   = get_option( 'mhs-ents24-standard-fields' );
+		$clientId     = rawurlencode( $clientData['client-id'] );
+		$clientSecret = rawurlencode( $clientData['client-secret'] );
+
+		if ( ! isset( $clientId ) || ! isset ( $clientSecret ) ) {
+			return false;
+		}
+
+		$endpoint   = 'https://api.ents24.com/auth/token';
+		$postString = 'client_id=' . $clientId . '&client_secret=' . $clientSecret;
+
+		$ch = curl_init();
+		curl_setopt( $ch, CURLOPT_URL, $endpoint );
+		curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
+		curl_setopt( $ch, CURLOPT_POST, 1 );
+		curl_setopt( $ch, CURLOPT_POSTFIELDS, $postString );
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		$response = curl_exec( $ch );
+
+		if ( curl_errno( $ch ) ) {
+			echo "ERROR: " . curl_error( $ch );
+			echo "\n<br />";
+			$response = '';
+		} else {
+			curl_close( $ch );
+		}
+		function isJson( $string ) {
+			json_decode( $string );
+
+			return ( json_last_error() == JSON_ERROR_NONE );
+		}
+
+		if ( ! isJson( $response ) || ! strlen( $response ) ) {
+			//Add alert to let admin now that there has been an issue retrieving the API
+			MHS_Ents24_Main::send_email_to_admin( $response );
+
+			return $response;
+		}
+
+		if ( curl_getinfo( $ch, CURLINFO_HTTP_CODE ) !== 401 ) {
+			$authToken = json_decode( $response )->access_token;
+			update_option( 'mhs-ents24-auth-token', $authToken );
+		} else {
+			return false;
+		}
+
+		return $authToken;
+
+	}
+
+	/**
+	 * Grab the data from ents24.
 	 * @access  public
 	 * @since   1.0.0
 	 */
@@ -114,11 +171,21 @@ final class MHS_Ents24_Main {
 			return false;
 		}
 
+		$authToken = get_option( 'mhs-ents24-auth-token' );
+//		$authToken = rawurlencode( $authToken['auth-token'] );
+
+		if ( ! isset( $authToken ) || $authToken === '' || $authToken === false ) {
+			$authToken = MHS_Ents24_Main::get_auth_token();
+		}
+
 		$url = "https://api.ents24.com/artist/events?id=" . $artistId . "&results_per_page=25";
 
 		$ch = curl_init();
 		curl_setopt( $ch, CURLOPT_URL, $url );
 		curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 5 );
+		curl_setopt( $ch, CURLOPT_HTTPHEADER, array(
+			'Authorization: ' . $authToken
+		) );
 		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 		$events = curl_exec( $ch );
 
@@ -146,14 +213,18 @@ final class MHS_Ents24_Main {
 			return $events;
 		}
 
-		update_option( 'mhs-ents24-raw-data', $events );
+		if ( curl_getinfo( $ch, CURLINFO_HTTP_CODE ) !== 401 ) {
+			update_option( 'mhs-ents24-raw-data', $events );
+		} else {
+			return false;
+		}
 
 		return $events;
 
 	} // End get_the_data()
 
 	/**
-	 * Format the events24 data and store in options table as HTML.
+	 * Format the ents24 data and store in options table as HTML.
 	 * @access  public
 	 * @since   1.0.0
 	 */
@@ -165,21 +236,20 @@ final class MHS_Ents24_Main {
 		//Reformat it into something that we can use
 		foreach ( $theData as $event ) {
 			$obj                    = [];
-			$obj['datetime']        = $event->datetime;
-			$obj['formatted_day']   = date( 'D', strtotime( $event->datetime ) );
-			$obj['formatted_date']  = date( 'd', strtotime( $event->datetime ) );
-			$obj['formatted_month'] = date( 'M', strtotime( $event->datetime ) );
-			$obj['formatted_year']  = date( 'Y', strtotime( $event->datetime ) );
-			$obj['formatted_time']  = date( 'h:i A', strtotime( $event->datetime ) );
-			$obj['city']            = $event->venue->city;
-			$obj['region']          = $event->venue->region;
-			$obj['country']         = $event->venue->country;
+			$obj['datetime']        = $event->startDate;
+			$obj['formatted_day']   = date( 'D', strtotime( $event->startDate ) );
+			$obj['formatted_date']  = date( 'd', strtotime( $event->startDate ) );
+			$obj['formatted_month'] = date( 'M', strtotime( $event->startDate ) );
+			$obj['formatted_year']  = date( 'Y', strtotime( $event->startDate ) );
+			$obj['formatted_time']  = $event->startTimeString;
+			$obj['city']            = $event->venue->address->town;
+			$obj['region']          = $event->venue->address->county;
 			$obj['venue']           = $event->venue->name;
-			$obj['eventdetails']    = $event->url;
-			foreach ( $event->offers as $offer ) {
-				if ( $offer->type === 'Tickets' ) {
-					$obj['tickets'] = $offer->url;
-				}
+			$obj['eventLink']       = $event->webLink;
+			$obj['eventTitle']      = $event->title;
+			$obj['eventdetails']    = $event->description;
+			if ( $event->ticketsAvailable === true ) {
+				$obj['tickets']     = $event->webLink;
 			}
 			array_push( $formattedData, $obj );
 		}
@@ -203,7 +273,7 @@ final class MHS_Ents24_Main {
 	}//End store_the_formatted_data
 
 	/**
-	 * Send an email to admin to let them know events24 API has failed.
+	 * Send an email to admin to let them know ents24 API has failed.
 	 * @access  public
 	 * @since   1.0.0
 	 * @return  void
@@ -212,7 +282,7 @@ final class MHS_Ents24_Main {
 		$email     = get_bloginfo( 'admin_email' );
 		$blogTitle = get_bloginfo( 'wpurl' );
 		$subject   = 'Issue with ' . $blogTitle;
-		$msg       = "The MHS-events24 plugin has failed to connect to the events24 API. We received the following error: ";
+		$msg       = "The MHS-ents24 plugin has failed to connect to the ents24 API. We received the following error: ";
 		$msg .= $error;
 		// send email
 		mail( $email, $subject, $msg );

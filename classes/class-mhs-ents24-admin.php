@@ -62,7 +62,7 @@ final class MHS_Ents24_Admin {
 	 * @return  void
 	 */
 	public function register_settings_screen () {
-		$this->_hook = add_submenu_page( 'options-general.php', __( 'MHS events24 Settings', 'mhs-ents24' ), __( 'events24', 'mhs-ents24' ), 'manage_options', 'mhs-ents24', array( $this, 'settings_screen' ) );
+		$this->_hook = add_submenu_page( 'options-general.php', __( 'MHS Ents24 Settings', 'mhs-ents24' ), __( 'Ents24', 'mhs-ents24' ), 'manage_options', 'mhs-ents24', array( $this, 'settings_screen' ) );
 	} // End register_settings_screen()
 
 	/**

@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name: MHS-events24
- * Description: Connect to your events24 account and retrieve data from the API. Then store it in your Wordpress Database
+ * Plugin Name: MHS-Ents24
+ * Description: Connect to your Ents24 account and retrieve data from the API. Then store it in your Wordpress Database
  * Version: 1.0.0
  * Author: Ben Watson
  * Author URI: http://benwatson.uk/
@@ -131,13 +131,13 @@ final class MHS_Ents24 {
 
 		if ( ! function_exists( 'MHS_Ents24_GetRawData' ) ) {
 			function MHS_Ents24_GetRawData() {
-				return MHS_Ents24_Main::get_the_raw_data();
+				return (new MHS_Ents24_Main)->get_the_raw_data();
 			}
 		}
 
 		if ( ! function_exists( 'MHS_Ents24_GetFormattedData' ) ) {
 			function MHS_Ents24_GetFormattedData() {
-				return MHS_Ents24_Main::get_the_formatted_data();
+				return (new MHS_Ents24_Main)->get_the_formatted_data();
 			}
 		}
 

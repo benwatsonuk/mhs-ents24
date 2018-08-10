@@ -263,31 +263,31 @@ final class MHS_Ents24_Settings {
 			case 'standard-fields':
 
 				$settings_fields['client-id'] = array(
-					'name'        => __( 'events24 ClientID', 'mhs-ents24' ),
+					'name'        => __( 'ents24 ClientID', 'mhs-ents24' ),
 					'type'        => 'text',
 					'default'     => '',
 					'section'     => 'standard-fields',
-					'description' => __( 'Pop the events24 client ID here.', 'mhs-ents24' )
+					'description' => __( 'Pop the ents24 client ID here.', 'mhs-ents24' )
 				);
 
 				$settings_fields['client-secret'] = array(
-					'name'        => __( 'events24 Client Secret', 'mhs-ents24' ),
+					'name'        => __( 'ents24 Client Secret', 'mhs-ents24' ),
 					'type'        => 'text',
 					'default'     => '',
 					'section'     => 'standard-fields',
-					'description' => __( 'Pop the events24 client secret here.', 'mhs-ents24' )
+					'description' => __( 'Pop the ents24 client secret here.', 'mhs-ents24' )
 				);
 
 				$settings_fields['artist-name'] = array(
-					'name'        => __( 'events24 Artist name', 'mhs-ents24' ),
+					'name'        => __( 'ents24 Artist name', 'mhs-ents24' ),
 					'type'        => 'text',
 					'default'     => '',
 					'section'     => 'standard-fields',
-					'description' => __( 'Pop the artist name in here - check with events24 that this exists.', 'mhs-ents24' )
+					'description' => __( 'Pop the artist name in here - check with ents24 that this exists.', 'mhs-ents24' )
 				);
 
 				$settings_fields['artist-id'] = array(
-					'name'        => __( 'events24 Artist ID', 'mhs-ents24' ),
+					'name'        => __( 'ents24 Artist ID', 'mhs-ents24' ),
 					'type'        => 'text',
 					'default'     => '',
 					'section'     => 'standard-fields',
@@ -295,7 +295,7 @@ final class MHS_Ents24_Settings {
 				);
 
 				$settings_fields['auth-token'] = array(
-					'name'        => __( 'events24 Auth Token', 'mhs-ents24' ),
+					'name'        => __( 'ents24 Auth Token', 'mhs-ents24' ),
 					'type'        => 'text',
 					'default'     => '',
 					'section'     => 'standard-fields',
