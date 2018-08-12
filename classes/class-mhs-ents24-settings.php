@@ -294,13 +294,6 @@ final class MHS_Ents24_Settings {
 					'description' => __( '', 'mhs-ents24' )
 				);
 
-				$settings_fields['auth-token'] = array(
-					'name'        => __( 'ents24 Auth Token', 'mhs-ents24' ),
-					'type'        => 'text',
-					'default'     => '',
-					'section'     => 'standard-fields',
-					'description' => __( '', 'mhs-ents24' )
-				);
 				/*
 				$settings_fields['textarea'] = array(
 												'name' => __( 'Example Textarea', 'mhs-ents24' ),

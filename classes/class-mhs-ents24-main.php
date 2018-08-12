@@ -245,9 +245,12 @@ final class MHS_Ents24_Main {
 			$obj['city']            = $event->venue->address->town;
 			$obj['region']          = $event->venue->address->county;
 			$obj['venue']           = $event->venue->name;
+			$obj['eventHeadline']   = $event->headline;
 			$obj['eventLink']       = $event->webLink;
 			$obj['eventTitle']      = $event->title;
-			$obj['eventdetails']    = $event->description;
+			$obj['eventDetails']    = $event->description;
+			$obj['eventImage']      = $event->image->url;
+			$obj['eventImageWidth'] = $event->image->width;
 			if ( $event->ticketsAvailable === true ) {
 				$obj['tickets']     = $event->webLink;
 			}
