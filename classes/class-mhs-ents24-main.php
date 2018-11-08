@@ -99,6 +99,16 @@ final class MHS_Ents24_Main {
 
 	}//End get_the_raw_data
 
+	/**
+	 * Check if the thing is JSON.
+	 * @access  public
+	 * @since   1.0.0
+	 */
+	public function isJson( $string ) {
+		json_decode( $string );
+
+		return ( json_last_error() == JSON_ERROR_NONE );
+	}
 
 	/**
 	 * Get an auth token from ents24 and put it in the database
@@ -133,25 +143,17 @@ final class MHS_Ents24_Main {
 		} else {
 			curl_close( $ch );
 		}
-		function isJson( $string ) {
-			json_decode( $string );
 
-			return ( json_last_error() == JSON_ERROR_NONE );
-		}
-
-		if ( ! isJson( $response ) || ! strlen( $response ) ) {
+		if ( ! MHS_Ents24_Main::isJson( $response ) || ! strlen( $response ) ) {
 			//Add alert to let admin now that there has been an issue retrieving the API
 			MHS_Ents24_Main::send_email_to_admin( $response );
 
 			return $response;
 		}
 
-		if ( curl_getinfo( $ch, CURLINFO_HTTP_CODE ) !== 401 ) {
-			$authToken = json_decode( $response )->access_token;
-			update_option( 'mhs-ents24-auth-token', $authToken );
-		} else {
-			return false;
-		}
+		$authToken = json_decode( $response )->access_token;
+		update_option( 'mhs-ents24-auth-token', $authToken );
+
 
 		return $authToken;
 
@@ -193,17 +195,16 @@ final class MHS_Ents24_Main {
 			echo "ERROR: " . curl_error( $ch );
 			echo "\n<br />";
 			$events = '';
+		} else if (array_key_exists('errors', json_decode($events))) {
+//			todo - add if statememt in to capture auth failure: re-gen authToken and curl again i.e. $authToken = MHS_Ents24_Main::get_auth_token(); and
+			// Delete authToken transient and call function again
+			delete_option( 'mhs-ents24-auth-token' );
+			MHS_Ents24_Main::curl_the_data();
 		} else {
 			curl_close( $ch );
 		}
 
-		function isJson( $string ) {
-			json_decode( $string );
-
-			return ( json_last_error() == JSON_ERROR_NONE );
-		}
-
-		if ( ! isJson( $events ) || ! strlen( $events ) ) {
+		if ( ! MHS_Ents24_Main::isJson( $events ) || ! strlen( $events ) ) {
 			$response = $events;
 //			echo "Failed to get contents.";
 			$events = get_option( 'mhs-ents24-raw-data' );
@@ -212,12 +213,12 @@ final class MHS_Ents24_Main {
 
 			return $events;
 		}
-
-		if ( curl_getinfo( $ch, CURLINFO_HTTP_CODE ) !== 401 ) {
-			update_option( 'mhs-ents24-raw-data', $events );
-		} else {
-			return false;
-		}
+//todo - only update option if it's the right format
+//		if ( curl_getinfo( $ch, CURLINFO_HTTP_CODE ) !== 401 ) {
+//			update_option( 'mhs-ents24-raw-data', $events );
+//		} else {
+//			return false;
+//		}
 
 		return $events;
 
@@ -243,7 +244,7 @@ final class MHS_Ents24_Main {
 			$obj['formatted_year']  = date( 'Y', strtotime( $event->startDate ) );
 			$obj['formatted_time']  = $event->startTimeString;
 			$obj['city']            = $event->venue->address->town;
-			$obj['region']          = $event->venue->address->county;
+			$obj['region'] = $event->venue->address->county;
 			$obj['venue']           = $event->venue->name;
 			$obj['eventHeadline']   = $event->headline;
 			$obj['eventLink']       = $event->webLink;
